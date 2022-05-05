@@ -81,16 +81,17 @@ export default {
           "Content-Type": "application/json",
         },
         method: "POST",
+        credentials: 'include',
         body: JSON.stringify(userData),
       })
         .then(res => res.json())
         .then(res => {
           if (res.message) alert(res.message);
-          if (res.token) {
-            localStorage.setItem("token", res.token);
+          if (res.accesToken) {
+            localStorage.setItem("accesToken", res.accesToken);
           }
         })
-        .then(() => this.$router.push('/user'))
+        //.then(() => this.$router.push('/user'))
         .catch(e => alert(e));
         this.username = '',
         this.password = ''

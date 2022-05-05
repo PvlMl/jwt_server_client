@@ -27,11 +27,11 @@ export default {
         }
     },
     mounted(){
-        const token = localStorage.getItem('token');
-        if(!token) return;
+        const accesToken = localStorage.getItem('accesToken');
+        if(!accesToken) return;
         fetch("http://localhost:3000/auth/user", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accesToken}`,
         },
         method: "GET"
       })

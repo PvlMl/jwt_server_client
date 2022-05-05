@@ -1,12 +1,17 @@
 const User = require("./models/users");
+const Token = require("./models/tokens")
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const {secret} = require("./config");
+const {accesKey, refreshKey} = require("./config");
 
 
-const generateAccesToken = (username, password) => {
-return jwt.sign({username, password }, secret, {expiresIn: '24h'})
+const generateAccesToken = (username, id) => {
+return jwt.sign({username, id }, accesKey, {expiresIn: 60 * 60})
 };
+
+const generateRefreshToken = (username, id) => {
+  return jwt.sign({username, id }, refreshKey, {expiresIn: 60 * 60})
+  };
 
 
 module.exports = {
@@ -21,6 +26,8 @@ module.exports = {
       const hashPassword = bcrypt.hashSync(password, 3);
       const user = new User({username, password: hashPassword});
       await user.save();
+
+      
       res.status(200).json({message: 'User added'});
       return;
     } catch (e) {
@@ -31,13 +38,25 @@ module.exports = {
   login: async (req, res) => {
     try {
       const { username, password } = req.body;
-      if(!username) return res.status(400).json("empty username");
+      if(!username) return res.status(400).json({message:"empty username"});
       const user = await User.findOne({username});
-      if(!user) return res.status(400).json("user not found");
-      if(!bcrypt.compareSync(password, user.password)) return res.status(400).json("Incorrect password");
+      if(!user) return res.status(400).json({message:"user not found"});
+      if(!bcrypt.compareSync(password, user.password)) return res.status(400).json({message:"Incorrect password"});
       else {
-        const token = generateAccesToken(username, user.password);
-        res.status(200).json({token, message: 'You are logged in'});
+        const id = user._id;
+        const payload = [username, id];
+        const accesToken = generateAccesToken(...payload);
+        
+        const refreshToken = generateRefreshToken(...payload);
+        const tokenData = await Token.findOne({user: id});
+        if (tokenData) {
+          tokenData.refreshToken = refreshToken;
+          return tokenData.save();
+         }
+         const token = await Token.create({user: id, refreshToken});
+         res.cookie('refreshToken', token, {maxAge: 30 * 24 * 60 * 60 * 1000})
+
+        res.status(200).json({accesToken, message: 'You are logged in'});
         return;
       }
     } catch (e) {
