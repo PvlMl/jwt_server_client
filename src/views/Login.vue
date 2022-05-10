@@ -84,14 +84,18 @@ export default {
         credentials: 'include',
         body: JSON.stringify(userData),
       })
-        .then(res => res.json())
-        .then(res => {
-          if (res.message) alert(res.message);
-          if (res.accesToken) {
-            localStorage.setItem("accesToken", res.accesToken);
+        .then(res => res.json()
+        .then(data => {
+          if (data.message){
+            alert(data.message);
+          } 
+           if (data.accesToken) {
+            localStorage.setItem("accesToken", data.accesToken);
           }
-        })
-        //.then(() => this.$router.push('/user'))
+          if(res.ok){
+            this.$router.push('/user')
+          }
+        }))
         .catch(e => alert(e));
         this.username = '',
         this.password = ''

@@ -5,11 +5,11 @@ const router = require("./router");
 var cors = require('cors')
 
 const app = express();
+app.use(express.json());
+app.use(cookieParser());
 
 app.use(cors({credentials: true, origin: 'http://localhost:8080'}));
 
-app.use(express.json());
-app.use(cookieParser());
 app.use("/auth", router);
 
 

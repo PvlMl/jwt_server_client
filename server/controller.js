@@ -1,18 +1,7 @@
 const User = require("./models/users");
 const Token = require("./models/tokens")
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const {accesKey, refreshKey} = require("./config");
-
-
-const generateAccesToken = (username, id) => {
-return jwt.sign({username, id }, accesKey, {expiresIn: 60 * 60})
-};
-
-const generateRefreshToken = (username, id) => {
-  return jwt.sign({username, id }, refreshKey, {expiresIn: 60 * 60})
-  };
-
+const {generateAccessToken, generateRefreshToken} = require("./service/tokens");
 
 module.exports = {
   registration: async (req, res) => {
@@ -38,23 +27,22 @@ module.exports = {
   login: async (req, res) => {
     try {
       const { username, password } = req.body;
-      if(!username) return res.status(400).json({message:"empty username"});
       const user = await User.findOne({username});
       if(!user) return res.status(400).json({message:"user not found"});
       if(!bcrypt.compareSync(password, user.password)) return res.status(400).json({message:"Incorrect password"});
       else {
         const id = user._id;
         const payload = [username, id];
-        const accesToken = generateAccesToken(...payload);
-        
+        const accesToken = generateAccessToken(...payload);
         const refreshToken = generateRefreshToken(...payload);
+
         const tokenData = await Token.findOne({user: id});
         if (tokenData) {
           tokenData.refreshToken = refreshToken;
           return tokenData.save();
          }
-         const token = await Token.create({user: id, refreshToken});
-         res.cookie('refreshToken', token, {maxAge: 30 * 24 * 60 * 60 * 1000})
+         Token.create({user: id, refreshToken});
+         res.cookie('refreshTokenData', refreshToken, {maxAge: 30 * 24 * 60 * 60 * 1000})
 
         res.status(200).json({accesToken, message: 'You are logged in'});
         return;
@@ -66,9 +54,21 @@ module.exports = {
   },
   getUser: async (req, res) => {
     try {
-      const user = await User.find({username: req.user.username});
-      const userData = {id: user[0]._id, username: user[0].username}
-      res.json(userData);
+      if(req.user && !req.accessToken){
+        const user = await User.find({username: req.user.username});
+        const userData = {id: user[0]._id, username: user[0].username}
+        res.json(userData);
+      }
+     else if(req.user && req.accessToken){
+        const user = await User.find({username: req.user.username});
+        res.cookie('refreshTokenData',req.cookie , {maxAge: 30 * 24 * 60 * 60 * 1000});
+        const userData = {accessToken: req.accessToken, id: user[0]._id, username: user[0].username}
+        res.json(userData);
+      } 
+      else {
+        res.json({id: null, username: ''});
+      }
+
     } catch (e) {
       console.log(e);
       res.status(400).json("error occurred");

@@ -27,19 +27,28 @@ export default {
         }
     },
     mounted(){
-        const accesToken = localStorage.getItem('accesToken');
+         this.sendAccesToken();
+    }, 
+    methods: {
+      sendAccesToken() {
+       const accesToken = localStorage.getItem('accesToken');
         if(!accesToken) return;
         fetch("http://localhost:3000/auth/user", {
         headers: {
           'Authorization': `Bearer ${accesToken}`,
         },
-        method: "GET"
+        method: "GET",
+        credentials: 'include'
       })
       .then(res => res.json())
       .then(res => {
-          this.username = res.username;
-          this.id = res.id;
+          this.username = res.username || '';
+          this.id = res.id || null;
+          if (res.accesToken) {
+            localStorage.setItem("accesToken", res.accesToken);
+          }
       })
+      }
     }
 }
 </script>

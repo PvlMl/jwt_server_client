@@ -83,12 +83,16 @@ export default {
         method: "POST",
         body: JSON.stringify(userData),
       })
-        .then((res) => res.json())
-        .then((res) => {
-          if (res.message) alert(res.message);
-        })
-        .then(() => this.$router.push('/login'))
-        .catch((e) => alert(e));
+        .then(res => res.json()
+        .then(data => {
+          if (data.message){
+            alert(data.message);
+          } 
+          if(res.ok){
+            this.$router.push('/login')
+          }
+        }))
+        .catch(e => alert(e));
         this.username = '',
         this.password = ''
     },

@@ -1,4 +1,4 @@
 module.exports = {
-    accesKey: "very_secret_acces_key",
+    accessKey: "very_secret_access_key",
     refreshKey: "very_secret_refresh_key"
 };
