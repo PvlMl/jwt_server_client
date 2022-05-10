@@ -15,7 +15,7 @@ app.use("/auth", router);
 
 const start = async () => {
     try {
-        await momgoose.connect("mongodb://localhost:27017/jwtdb")
+        await momgoose.connect("mongodb://localhost:27017/...")
      app.listen(3000, () => {
          console.log("server started")
      })
